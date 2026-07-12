@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, AtSign, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
 
 /**
  * Sign-in / sign-up modal backed by Supabase Auth.
@@ -24,6 +25,15 @@ export default function AuthModal({ onClose, onAuthed }) {
     setLoading(true);
     try {
       if (mode === 'signup') {
+        // If a previous signup for this email was never confirmed, Supabase
+        // won't resend the confirmation. Clear that stuck account first so the
+        // signUp below creates a fresh user and sends a new confirmation email.
+        try {
+          await db.resetUnconfirmed(email);
+        } catch {
+          /* backend not configured / not reachable — proceed with normal signup */
+        }
+
         const { data, error: err } = await supabase.auth.signUp({
           email,
           password,

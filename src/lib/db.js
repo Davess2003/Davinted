@@ -5,7 +5,8 @@ import { getAccessToken } from './supabase';
 // Supabase JWT so the backend knows who you are.
 async function request(path, { method = 'GET', body } = {}) {
   const token = await getAccessToken();
-  const res = await fetch(`${API_BASE}${path}`, {
+  // Data routes are mounted under /api on the Express server.
+  const res = await fetch(`${API_BASE}/api${path}`, {
     method,
     headers: {
       'Content-Type': 'application/json',
@@ -29,6 +30,9 @@ async function request(path, { method = 'GET', body } = {}) {
 }
 
 export const db = {
+  // auth: clear a stuck UNCONFIRMED account so signup can resend confirmation
+  resetUnconfirmed: (email) => request('/auth/reset-unconfirmed', { method: 'POST', body: { email } }),
+
   // uploads (base64 data URL -> Supabase Storage; returns { url })
   uploadImage: (dataUrl) => request('/upload', { method: 'POST', body: { image: dataUrl } }),
 

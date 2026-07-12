@@ -93,6 +93,49 @@ function mapChat(row) {
 const fail = (res, err) => res.status(500).json({ error: err.message || String(err) });
 
 // ===========================================================================
+// AUTH HELPERS (unauthenticated — used during signup)
+// ===========================================================================
+
+// The admin API has no getUserByEmail, so page through listUsers and match.
+// Fine for small user bases; revisit if the user table grows very large.
+async function findUserByEmail(email) {
+  const target = email.trim().toLowerCase();
+  const perPage = 1000;
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+    if (error) throw error;
+    const users = data?.users || [];
+    const found = users.find((u) => (u.email || '').toLowerCase() === target);
+    if (found) return found;
+    if (users.length < perPage) break; // reached the last page
+  }
+  return null;
+}
+
+// If an UNCONFIRMED account already exists for this email, delete it so the
+// client's subsequent signUp() creates a fresh user and a new confirmation
+// email goes out. Confirmed (real) accounts are never touched.
+router.post('/auth/reset-unconfirmed', requireSupabase, async (req, res) => {
+  try {
+    const email = (req.body?.email || '').trim();
+    if (!email) return res.status(400).json({ error: 'Email is required.' });
+
+    const user = await findUserByEmail(email);
+    const isConfirmed = user && (user.email_confirmed_at || user.confirmed_at);
+
+    if (user && !isConfirmed) {
+      const { error } = await supabaseAdmin.auth.admin.deleteUser(user.id);
+      if (error) return fail(res, error);
+      return res.json({ ok: true, reset: true });
+    }
+    // No account, or a confirmed one we must not delete.
+    res.json({ ok: true, reset: false });
+  } catch (err) {
+    fail(res, err);
+  }
+});
+
+// ===========================================================================
 // IMAGE UPLOAD  ->  Supabase Storage (public bucket "listings")
 // Frontend sends a base64 data URL; we store the file and return its public
 // URL, so listing rows only ever hold a short URL (never megabytes of base64).
