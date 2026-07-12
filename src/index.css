@@ -3246,3 +3246,86 @@ button, input, select, textarea {
   border-radius: 50%;
   background: var(--sage-light);
 }
+
+/* ============================================================
+   Responsive system — layered so the UI stays tidy from phones
+   through tablets to large desktops. Breakpoints cascade:
+   820 (tablet header) → 768 (stacked modals) → 640 (phones)
+   → 560 (forms/modals) → 380 (extra-small).
+   ============================================================ */
+
+/* Tablet & below: the search bar takes its own full-width row so the top
+   bar never gets crushed; header actions compact and may wrap. */
+@media (max-width: 820px) {
+  .header { padding: 12px 0; }
+  .header-inner { flex-wrap: wrap; gap: 10px 12px; }
+  .search-bar-wrapper {
+    order: 3;
+    flex-basis: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .role-switcher-btn span { display: none; }
+  .role-switcher-btn { padding: 8px; }
+  .header-auth-btn { padding: 8px 14px; }
+}
+
+/* Small screens: stacked modals read top-to-bottom nicely. Show the checkout
+   order summary ABOVE the form (context before you pay). */
+@media (max-width: 768px) {
+  .checkout-right-summary {
+    order: -1;
+    border-left: none;
+    border-bottom: 1px solid var(--gray-100);
+  }
+}
+
+/* Phones: tighter hero + catalog, and a clean 2-up product grid. */
+@media (max-width: 640px) {
+  .max-width-container { padding: 0 16px; }
+  .logo-badge { width: 34px; height: 34px; border-radius: 10px; font-size: 1.05rem; }
+  .logo-text { font-size: 1.15rem; }
+  .search-bar-input { padding: 9px 14px 9px 38px; font-size: 0.8rem; }
+
+  .hero { padding: 32px 0; }
+  .hero-inner { gap: 26px; }
+  .hero-title { font-size: 2rem; margin-bottom: 14px; }
+  .hero-desc { font-size: 0.92rem; margin-bottom: 22px; }
+  .hero-tags-wrapper { justify-content: center; }
+
+  .catalog-section { padding: 32px 0; }
+  .catalog-header-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .catalog-title { font-size: 1.25rem; }
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+  footer .max-width-container {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 24px !important;
+  }
+}
+
+/* Narrow phones: two-column form fields collapse to one; snug modals. */
+@media (max-width: 560px) {
+  .form-grid-2cols { grid-template-columns: 1fr; }
+  .modal-overlay { padding: 12px; }
+  .wizard-modal-box { padding: 20px; border-radius: 22px; }
+  .wizard-footer-actions { gap: 10px; }
+  .checkout-left-form, .checkout-right-summary { padding: 22px; }
+}
+
+/* Extra-small phones: single-column catalog + smaller headline. */
+@media (max-width: 380px) {
+  .product-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 1.75rem; }
+  footer .max-width-container { grid-template-columns: 1fr !important; }
+}
